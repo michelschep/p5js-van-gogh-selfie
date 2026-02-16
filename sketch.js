@@ -1,7 +1,9 @@
 let capture;
 let capturedImage;
 let processedImage;
-let state = 'camera'; // 'camera', 'captured', 'processed'
+let state = 'camera'; // 'camera', 'countdown', 'captured', 'processed'
+let countdown = 0;
+let countdownStartTime = 0;
 
 function setup() {
     let canvas = createCanvas(640, 480);
@@ -32,6 +34,44 @@ function draw() {
         line(width/2, height/2 - 160, width/2, height/2 + 160);
         line(width/2 - 160, height/2, width/2 + 160, height/2);
         
+    } else if (state === 'countdown') {
+        // Toon live camera feed met countdown
+        image(capture, 0, 0, width, height);
+        
+        // Bereken huidige countdown nummer
+        let elapsed = (millis() - countdownStartTime) / 1000;
+        let currentCount = ceil(countdown - elapsed);
+        
+        if (currentCount > 0) {
+            // Toon countdown nummer
+            fill(255, 255, 0);
+            noStroke();
+            textAlign(CENTER, CENTER);
+            textSize(200);
+            textStyle(BOLD);
+            
+            // Pulse effect
+            let scale = 1 + (1 - (elapsed % 1)) * 0.3;
+            push();
+            translate(width/2, height/2);
+            scale(scale);
+            text(currentCount, 0, 0);
+            pop();
+            
+            // Outer glow
+            fill(255, 255, 0, 100);
+            textSize(220);
+            push();
+            translate(width/2, height/2);
+            scale(scale);
+            text(currentCount, 0, 0);
+            pop();
+            
+        } else {
+            // Countdown klaar - maak foto
+            takePicture();
+        }
+        
     } else if (state === 'captured') {
         // Toon captured foto
         image(capturedImage, 0, 0, width, height);
@@ -43,6 +83,17 @@ function draw() {
 }
 
 function capturePhoto() {
+    // Start countdown
+    countdown = 3;
+    countdownStartTime = millis();
+    state = 'countdown';
+    
+    // Disable buttons tijdens countdown
+    document.getElementById('captureBtn').disabled = true;
+    document.getElementById('resetBtn').disabled = true;
+}
+
+function takePicture() {
     // Maak snapshot van camera
     capturedImage = createImage(capture.width, capture.height);
     capturedImage.copy(capture, 0, 0, capture.width, capture.height, 
@@ -51,6 +102,8 @@ function capturePhoto() {
     state = 'captured';
     
     // Update buttons
+    document.getElementById('captureBtn').disabled = false;
+    document.getElementById('resetBtn').disabled = false;
     document.getElementById('applyBtn').disabled = false;
     document.getElementById('saveBtn').disabled = true;
 }
