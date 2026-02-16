@@ -58,80 +58,120 @@ function capturePhoto() {
 function applyVanGoghStyle() {
     if (!capturedImage) return;
     
-    // Maak kopie voor processing
-    processedImage = createImage(capturedImage.width, capturedImage.height);
-    processedImage.copy(capturedImage, 0, 0, capturedImage.width, capturedImage.height,
-                        0, 0, capturedImage.width, capturedImage.height);
+    // Maak graphics buffer voor painting
+    let pg = createGraphics(capturedImage.width, capturedImage.height);
+    pg.background(0);
     
-    processedImage.loadPixels();
     capturedImage.loadPixels();
     
-    // Van Gogh effect: brushstroke + color enhancement
-    const brushSize = 8;
+    // Oil painting effect met directional brushstrokes
+    const brushLength = 12;
+    const brushDensity = 4;
     
-    for (let y = 0; y < processedImage.height; y += brushSize) {
-        for (let x = 0; x < processedImage.width; x += brushSize) {
-            
-            // Sample kleur uit gebied
-            let idx = (y * processedImage.width + x) * 4;
-            let r = capturedImage.pixels[idx];
-            let g = capturedImage.pixels[idx + 1];
-            let b = capturedImage.pixels[idx + 2];
-            
-            // Van Gogh kleur transformatie: verhoog saturatie en levendigheid
-            let hsb = rgbToHsb(r, g, b);
-            hsb.s = constrain(hsb.s * 1.4, 0, 1); // Meer saturatie
-            hsb.b = constrain(hsb.b * 1.1, 0, 1); // Meer brightness
-            
-            // Voeg variatie toe (brushstroke effect)
-            hsb.h += random(-0.02, 0.02);
-            hsb.s += random(-0.05, 0.05);
-            hsb.b += random(-0.05, 0.05);
-            
-            let rgb = hsbToRgb(hsb.h, hsb.s, hsb.b);
-            
-            // Pas toe op brush area met swirl pattern
-            for (let by = 0; by < brushSize; by++) {
-                for (let bx = 0; bx < brushSize; bx++) {
-                    let px = x + bx;
-                    let py = y + by;
-                    
-                    if (px < processedImage.width && py < processedImage.height) {
-                        // Circular brushstroke pattern
-                        let dx = bx - brushSize/2;
-                        let dy = by - brushSize/2;
-                        let dist = sqrt(dx*dx + dy*dy);
-                        
-                        if (dist < brushSize/2) {
-                            let pIdx = (py * processedImage.width + px) * 4;
-                            
-                            // Blend met origineel op basis van afstand tot centrum
-                            let blend = 1 - (dist / (brushSize/2)) * 0.3;
-                            
-                            processedImage.pixels[pIdx] = rgb.r * blend + processedImage.pixels[pIdx] * (1-blend);
-                            processedImage.pixels[pIdx + 1] = rgb.g * blend + processedImage.pixels[pIdx + 1] * (1-blend);
-                            processedImage.pixels[pIdx + 2] = rgb.b * blend + processedImage.pixels[pIdx + 2] * (1-blend);
-                        }
-                    }
+    pg.noStroke();
+    
+    // Meerdere layers voor depth
+    for (let layer = 0; layer < 3; layer++) {
+        let density = brushDensity + layer * 2;
+        
+        for (let y = density; y < capturedImage.height - density; y += density) {
+            for (let x = density; x < capturedImage.width - density; x += density) {
+                
+                // Sample kleur
+                let idx = (y * capturedImage.width + x) * 4;
+                let r = capturedImage.pixels[idx];
+                let g = capturedImage.pixels[idx + 1];
+                let b = capturedImage.pixels[idx + 2];
+                
+                // Van Gogh kleur palette
+                let hsb = rgbToHsb(r, g, b);
+                
+                // Shift naar Van Gogh kleuren (meer geel, blauw, warmte)
+                if (hsb.h > 0.08 && hsb.h < 0.18) { // Geel/oranje boost
+                    hsb.h = constrain(hsb.h + 0.02, 0, 1);
+                    hsb.s = constrain(hsb.s * 1.5, 0, 1);
                 }
+                if (hsb.h > 0.5 && hsb.h < 0.7) { // Blauw boost
+                    hsb.s = constrain(hsb.s * 1.3, 0, 1);
+                }
+                
+                // Algemene saturatie en brightness boost
+                hsb.s = constrain(hsb.s * 1.6, 0, 1);
+                hsb.b = constrain(hsb.b * 1.15, 0, 1);
+                
+                // Variatie per layer
+                hsb.h += random(-0.03, 0.03);
+                hsb.s += random(-0.1, 0.1);
+                hsb.b += random(-0.1, 0.1);
+                
+                hsb.h = constrain(hsb.h, 0, 1);
+                hsb.s = constrain(hsb.s, 0, 1);
+                hsb.b = constrain(hsb.b, 0, 1);
+                
+                let rgb = hsbToRgb(hsb.h, hsb.s, hsb.b);
+                
+                // Bereken brushstroke richting (simplified edge detection)
+                let angle = calculateBrushAngle(x, y, capturedImage);
+                
+                // Teken brushstroke
+                pg.push();
+                pg.translate(x, y);
+                pg.rotate(angle);
+                
+                // Alpha based on layer
+                let alpha = map(layer, 0, 2, 180, 255);
+                pg.fill(rgb.r, rgb.g, rgb.b, alpha);
+                
+                // Elliptische brushstroke
+                let w = brushLength + random(-2, 2);
+                let h = brushLength * 0.4 + random(-1, 1);
+                pg.ellipse(0, 0, w, h);
+                
+                pg.pop();
             }
         }
     }
     
-    // Apply subtle texture overlay
-    for (let i = 0; i < processedImage.pixels.length; i += 4) {
-        let noise = random(-10, 10);
-        processedImage.pixels[i] = constrain(processedImage.pixels[i] + noise, 0, 255);
-        processedImage.pixels[i+1] = constrain(processedImage.pixels[i+1] + noise, 0, 255);
-        processedImage.pixels[i+2] = constrain(processedImage.pixels[i+2] + noise, 0, 255);
-    }
+    // Converteer graphics buffer naar image
+    processedImage = pg.get();
     
+    // Post-processing: impasto texture
+    processedImage.loadPixels();
+    for (let i = 0; i < processedImage.pixels.length; i += 4) {
+        let texNoise = noise(i * 0.01) * 15 - 7.5;
+        processedImage.pixels[i] = constrain(processedImage.pixels[i] + texNoise, 0, 255);
+        processedImage.pixels[i+1] = constrain(processedImage.pixels[i+1] + texNoise, 0, 255);
+        processedImage.pixels[i+2] = constrain(processedImage.pixels[i+2] + texNoise, 0, 255);
+    }
     processedImage.updatePixels();
     
     state = 'processed';
     
     // Update buttons
     document.getElementById('saveBtn').disabled = false;
+}
+
+function calculateBrushAngle(x, y, img) {
+    // Simplified gradient-based angle calculation
+    let radius = 3;
+    let sumX = 0;
+    let sumY = 0;
+    
+    for (let dy = -radius; dy <= radius; dy++) {
+        for (let dx = -radius; dx <= radius; dx++) {
+            let nx = constrain(x + dx, 0, img.width - 1);
+            let ny = constrain(y + dy, 0, img.height - 1);
+            let idx = (ny * img.width + nx) * 4;
+            
+            let brightness = (img.pixels[idx] + img.pixels[idx+1] + img.pixels[idx+2]) / 3;
+            
+            sumX += dx * brightness;
+            sumY += dy * brightness;
+        }
+    }
+    
+    // Angle perpendicular to gradient (for brushstroke along edges)
+    return atan2(sumY, sumX) + HALF_PI + random(-0.3, 0.3);
 }
 
 function saveImage() {
