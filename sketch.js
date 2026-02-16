@@ -51,10 +51,10 @@ function draw() {
             textStyle(BOLD);
             
             // Pulse effect
-            let scale = 1 + (1 - (elapsed % 1)) * 0.3;
+            let scaleAmount = 1 + (1 - (elapsed % 1)) * 0.3;
             push();
             translate(width/2, height/2);
-            scale(scale);
+            scale(scaleAmount);
             text(currentCount, 0, 0);
             pop();
             
@@ -63,7 +63,7 @@ function draw() {
             textSize(220);
             push();
             translate(width/2, height/2);
-            scale(scale);
+            scale(scaleAmount);
             text(currentCount, 0, 0);
             pop();
             
