@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Van Gogh Selfie</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Georgia', serif;
+            color: #fff;
+        }
+        h1 {
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .subtitle {
+            margin-bottom: 20px;
+            font-style: italic;
+            opacity: 0.9;
+        }
+        #canvas-container {
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            background: #000;
+        }
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        button {
+            padding: 12px 30px;
+            font-size: 16px;
+            font-family: 'Georgia', serif;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            font-weight: bold;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        #captureBtn {
+            background: #FFD700;
+            color: #333;
+        }
+        #applyBtn {
+            background: #FF6B6B;
+            color: white;
+        }
+        #applyBtn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        #saveBtn {
+            background: #4ECDC4;
+            color: white;
+        }
+        #saveBtn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        #resetBtn {
+            background: #95E1D3;
+            color: #333;
+        }
+        .info {
+            margin-top: 15px;
+            font-size: 14px;
+            opacity: 0.8;
+            text-align: center;
+            max-width: 640px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎨 Van Gogh Selfie</h1>
+    <p class="subtitle">Transformeer je selfie naar een meesterwerk</p>
+    
+    <div id="canvas-container"></div>
+    
+    <div class="controls">
+        <button id="captureBtn">📸 Maak Foto</button>
+        <button id="applyBtn" disabled>🖌️ Van Gogh Stijl</button>
+        <button id="saveBtn" disabled>💾 Opslaan</button>
+        <button id="resetBtn">🔄 Reset</button>
+    </div>
+    
+    <div class="info">
+        Sta toegang tot je camera toe en maak een selfie. Klik daarna op "Van Gogh Stijl" om je foto te transformeren met brushstroke effecten en levendige kleuren.
+    </div>
+    
+    <script src="sketch.js"></script>
+</body>
+</html>
